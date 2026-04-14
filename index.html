@@ -168,22 +168,10 @@
         });
 
         function genPhoto(title, name, desc, warning, contact, photo){
-            return fetch('https://image.edgeone.app/', {
+            return fetch('/api/generate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'OE-USER-ID': '341ec31b3b9f4602b95b5117823d2f43',
-                    'OE-API-KEY': import.meta.env.AK || 'YOUR_API_KEY',
-                    'OE-TEMPLATE-ID': 'ep-tB9p4ZAP5hKL'
-                },
-                body: JSON.stringify({
-                    title,
-                    name,
-                    desc,
-                    warning,
-                    contact,
-                    photo
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, name, desc, warning, contact, photo })
             }).then(res => res.json());
         }
 
