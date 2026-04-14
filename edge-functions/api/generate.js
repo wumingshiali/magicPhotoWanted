@@ -15,15 +15,28 @@ export default async function onRequest(context) {
   });
 
   const contentType = res.headers.get('content-type') || '';
-  let data;
-  if (contentType.includes('application/json')) {
-    data = await res.json();
-  } else {
-    const text = await res.text();
-    data = { error: text, status: res.status };
+
+  // 如果是图片，直接返回
+  if (contentType.includes('image')) {
+    const buffer = await res.arrayBuffer();
+    return new Response(buffer, {
+      status: res.status,
+      headers: { 'Content-Type': contentType }
+    });
   }
 
-  return new Response(JSON.stringify(data), {
+  // 如果是 JSON，解析后返回
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    return new Response(JSON.stringify(data), {
+      status: res.status,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  // 其他情况，返回文本
+  const text = await res.text();
+  return new Response(JSON.stringify({ error: text, status: res.status }), {
     status: res.status,
     headers: { 'Content-Type': 'application/json' }
   });
