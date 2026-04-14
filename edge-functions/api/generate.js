@@ -14,8 +14,17 @@ export default async function onRequest(context) {
     body: JSON.stringify(body)
   });
 
-  const data = await res.json();
+  const contentType = res.headers.get('content-type') || '';
+  let data;
+  if (contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    data = { error: text, status: res.status };
+  }
+
   return new Response(JSON.stringify(data), {
+    status: res.status,
     headers: { 'Content-Type': 'application/json' }
   });
 }
