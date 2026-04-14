@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通缉令生成器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .photo-upload {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .photo-upload input[type="file"] {
+            flex: 1;
+        }
+        .photo-upload span {
+            color: #888;
+            font-size: 12px;
+        }
+        .photo-preview {
+            margin-top: 10px;
+            max-width: 200px;
+        }
+        .photo-preview img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .result img {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>通缉令生成器</h1>
+        <form id="posterForm">
+            <div class="form-group">
+                <label for="title">标题</label>
+                <input type="text" id="title" value="通缉" required>
+            </div>
+            <div class="form-group">
+                <label for="name">姓名</label>
+                <input type="text" id="name" value="张三" required>
+            </div>
+            <div class="form-group">
+                <label for="desc">描述</label>
+                <textarea id="desc" required>该人员自4月2日起失踪，如有知其下落者，请速与警方联系，提供线索者将给予重奖。</textarea>
+            </div>
+            <div class="form-group">
+                <label for="warning">警告</label>
+                <input type="text" id="warning" value="请勿擅自接近，如有发现请立即报警">
+            </div>
+            <div class="form-group">
+                <label for="contact">联系方式</label>
+                <textarea id="contact" required>如有任何线索，请联系当地派出所或拨打求助热线：null。</textarea>
+            </div>
+            <div class="form-group">
+                <label>照片</label>
+                <div class="photo-upload">
+                    <input type="file" id="photoFile" accept="image/*">
+                </div>
+                <span>或</span>
+                <div class="photo-upload" style="margin-top: 5px;">
+                    <input type="url" id="photo" placeholder="输入照片 URL">
+                </div>
+                <div class="photo-preview" id="photoPreview"></div>
+            </div>
+            <button type="submit" id="generateBtn">生成通缉令</button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        let photoDataUrl = null;
+
+        // 文件上传预览
+        document.getElementById('photoFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    photoDataUrl = event.target.result;
+                    document.getElementById('photoPreview').innerHTML = '<img src="' + photoDataUrl + '" alt="照片预览">';
+                    document.getElementById('photo').value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('photo').addEventListener('input', function() {
+            if (this.value) {
+                photoDataUrl = null;
+                document.getElementById('photoPreview').innerHTML = '';
+                document.getElementById('photoFile').value = '';
+            }
+        });
+
+        function genPhoto(title, name, desc, warning, contact, photo){
+            return fetch('https://image.edgeone.app/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'OE-USER-ID': '341ec31b3b9f4602b95b5117823d2f43',
+                    'OE-API-KEY': import.meta.env.AK || 'YOUR_API_KEY',
+                    'OE-TEMPLATE-ID': 'ep-tB9p4ZAP5hKL'
+                },
+                body: JSON.stringify({
+                    title,
+                    name,
+                    desc,
+                    warning,
+                    contact,
+                    photo
+                })
+            }).then(res => res.json());
+        }
+
+        document.getElementById('posterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const result = document.getElementById('result');
+            
+            const photoUrl = photoDataUrl || document.getElementById('photo').value;
+            if (!photoUrl) {
+                result.innerHTML = '<p class="error">请上传照片或输入照片 URL</p>';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '生成中...';
+            result.innerHTML = '';
+
+            try {
+                const data = await genPhoto(
+                    document.getElementById('title').value,
+                    document.getElementById('name').value,
+                    document.getElementById('desc').value,
+                    document.getElementById('warning').value,
+                    document.getElementById('contact').value,
+                    photoUrl
+                );
+                
+                if (data && data.url) {
+                    result.innerHTML = `<img src="${data.url}" alt="生成的通缉令">`;
+                } else {
+                    result.innerHTML = '<p class="error">生成失败。响应: ' + JSON.stringify(data) + '</p>';
+                }
+            } catch (error) {
+                result.innerHTML = '<p class="error">错误: ' + error.message + '</p>';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '生成通缉令';
+            }
+        });
+    </script>
+</body>
+</html>
