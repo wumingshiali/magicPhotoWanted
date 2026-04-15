@@ -36,7 +36,23 @@ export default async function onRequest(context) {
 
   // 其他情况，返回文本
   const text = await res.text();
-  return new Response(JSON.stringify({ error: text, status: res.status }), {
+  
+  // 尝试检测是否为 JSON（有些响应可能没有正确的 content-type）
+  try {
+    const trimmed = text.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      JSON.parse(trimmed); // 验证是否为有效 JSON
+      return new Response(trimmed, {
+        status: res.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  } catch {
+    // 不是有效 JSON，继续处理
+  }
+  
+  return new Response(JSON.stringify({ error: text.substring(0, 500), status: res.status }), {
     status: res.status,
     headers: { 'Content-Type': 'application/json' }
   });

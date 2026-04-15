@@ -180,7 +180,14 @@
                 return { url: URL.createObjectURL(blob) };
             }
 
-            return res.json();
+            // 安全地解析 JSON 响应
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                // 如果响应不是有效 JSON，返回错误信息
+                return { error: '服务器返回了无效的响应: ' + text.substring(0, 100) };
+            }
         }
 
         document.getElementById('posterForm').addEventListener('submit', async function(e) {
