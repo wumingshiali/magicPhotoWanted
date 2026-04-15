@@ -214,9 +214,11 @@
                     document.getElementById('contact').value,
                     photoUrl
                 );
-                
+
                 if (data && data.url) {
                     result.innerHTML = `<img src="${data.url}" alt="生成的通缉令">`;
+                } else if (data && data.error) {
+                    result.innerHTML = `<p class="error">生成失败: ${data.error}</p>`;
                 } else {
                     result.innerHTML = '<p class="error">生成失败。响应: ' + JSON.stringify(data) + '</p>';
                 }
