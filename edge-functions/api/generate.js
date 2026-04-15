@@ -4,6 +4,20 @@ export default async function onRequest(context) {
 
     const body = await context.request.json();
 
+    // 根据模板变量映射前端数据
+    // 模板 ID: ep-tB9p4ZAP5hKL
+    const templateData = {
+      title: body.title || '',
+      name: body.name || '',
+      desc: body.desc || '',
+      warning: body.warning || '',
+      contact: body.contact || '',
+      photo: body.photo || ''
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for image generation
+
     const res = await fetch('https://image.edgeone.app/', {
       method: 'POST',
       headers: {
@@ -12,8 +26,11 @@ export default async function onRequest(context) {
         'OE-API-KEY': AK,
         'OE-TEMPLATE-ID': 'ep-tB9p4ZAP5hKL'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(templateData),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     const contentType = res.headers.get('content-type') || '';
 
@@ -59,10 +76,16 @@ export default async function onRequest(context) {
     });
   } catch (error) {
     // 捕获所有异常，返回格式化的错误信息
+    let errorMessage = error.message || 'Internal server error';
+    if (error.name === 'AbortError') {
+      errorMessage = 'Request timeout: 上游 API 响应超时，请稍后重试';
+    } else if (errorMessage.includes('net_exception_timeout')) {
+      errorMessage = 'Request timeout: 上游 API 响应超时，请稍后重试';
+    }
     return new Response(JSON.stringify({
-      error: error.message || 'Internal server error'
+      error: errorMessage
     }), {
-      status: 500,
+      status: 504,
       headers: { 'Content-Type': 'application/json' }
     });
   }
