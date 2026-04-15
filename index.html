@@ -129,11 +129,7 @@
             <div class="form-group">
                 <label>照片</label>
                 <div class="photo-upload">
-                    <input type="file" id="photoFile" accept="image/*">
-                </div>
-                <span>或</span>
-                <div class="photo-upload" style="margin-top: 5px;">
-                    <input type="url" id="photo" placeholder="输入照片 URL">
+                    <input type="url" id="photo" placeholder="输入照片 URL（必须可公开访问）" required>
                 </div>
                 <div class="photo-preview" id="photoPreview"></div>
             </div>
@@ -143,50 +139,60 @@
     </div>
 
     <script>
-        let photoDataUrl = null;
+        // 不支持本地文件上传，只能使用 URL
+        // let photoDataUrl = null;
 
-        // 文件上传预览
-        document.getElementById('photoFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    photoDataUrl = event.target.result;
-                    document.getElementById('photoPreview').innerHTML = '<img src="' + photoDataUrl + '" alt="照片预览">';
-                    document.getElementById('photo').value = '';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // 移除文件上传预览功能（不支持 base64，会导致请求过大超时）
+        // document.getElementById('photoFile').addEventListener('change', function(e) {
+        //     ...
+        // });
 
+        // URL 输入时实时预览
         document.getElementById('photo').addEventListener('input', function() {
-            if (this.value) {
-                photoDataUrl = null;
-                document.getElementById('photoPreview').innerHTML = '';
-                document.getElementById('photoFile').value = '';
+            const url = this.value;
+            const preview = document.getElementById('photoPreview');
+            if (url) {
+                preview.innerHTML = '<img src="' + url + '" alt="照片预览" onerror="this.parentElement.innerHTML=\'<p style=color:red>图片加载失败</p>\'">';
+            } else {
+                preview.innerHTML = '';
             }
         });
 
         async function genPhoto(title, name, desc, warning, contact, photo){
-            const res = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, name, desc, warning, contact, photo })
-            });
+            // 创建超时控制器
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 130000); // 130 秒超时（比后端稍长）
 
-            const contentType = res.headers.get('content-type') || '';
-            if (contentType.includes('image')) {
-                const blob = await res.blob();
-                return { url: URL.createObjectURL(blob) };
-            }
-
-            // 安全地解析 JSON 响应
-            const text = await res.text();
             try {
-                return JSON.parse(text);
-            } catch (e) {
-                // 如果响应不是有效 JSON，返回错误信息
-                return { error: '服务器返回了无效的响应: ' + text.substring(0, 100) };
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, name, desc, warning, contact, photo }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('image')) {
+                    const blob = await res.blob();
+                    return { url: URL.createObjectURL(blob) };
+                }
+
+                // 安全地解析 JSON 响应
+                const text = await res.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    // 如果响应不是有效 JSON，返回错误信息
+                    return { error: '服务器返回了无效的响应: ' + text.substring(0, 100) };
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    return { error: '请求超时：图片生成时间过长，请稍后重试' };
+                }
+                throw error;
             }
         }
 
@@ -194,16 +200,24 @@
             e.preventDefault();
             const btn = document.getElementById('generateBtn');
             const result = document.getElementById('result');
-            
-            const photoUrl = photoDataUrl || document.getElementById('photo').value;
+
+            const photoUrl = document.getElementById('photo').value;
             if (!photoUrl) {
-                result.innerHTML = '<p class="error">请上传照片或输入照片 URL</p>';
+                result.innerHTML = '<p class="error">请输入照片 URL</p>';
+                return;
+            }
+            
+            // 验证 URL 格式
+            try {
+                new URL(photoUrl);
+            } catch {
+                result.innerHTML = '<p class="error">请输入有效的 URL 地址</p>';
                 return;
             }
             
             btn.disabled = true;
-            btn.textContent = '生成中...（最多30秒）';
-            result.innerHTML = '';
+            btn.textContent = '生成中...（图片生成可能需要1-2分钟）';
+            result.innerHTML = '<p>正在生成通缉令，请稍候...</p>';
 
             try {
                 const data = await genPhoto(

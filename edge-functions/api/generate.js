@@ -16,7 +16,7 @@ export default async function onRequest(context) {
     console.log('收到请求，模板数据:', JSON.stringify(body));
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 秒超时
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 秒超时
 
     console.log('开始调用上游 API, AK:', AK.substring(0, 10) + '...');
 
