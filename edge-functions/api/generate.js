@@ -1,22 +1,24 @@
 export default async function onRequest(context) {
   try {
     const AK = context.env.AK || '';
+    
+    if (!AK) {
+      return new Response(JSON.stringify({
+        error: 'API Key 未配置，请检查环境变量 AK'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     const body = await context.request.json();
 
-    // 根据模板变量映射前端数据
-    // 模板 ID: ep-tB9p4ZAP5hKL
-    const templateData = {
-      title: body.title || '',
-      name: body.name || '',
-      desc: body.desc || '',
-      warning: body.warning || '',
-      contact: body.contact || '',
-      photo: body.photo || ''
-    };
+    console.log('收到请求，模板数据:', JSON.stringify(body));
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for image generation
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 秒超时
+
+    console.log('开始调用上游 API, AK:', AK.substring(0, 10) + '...');
 
     const res = await fetch('https://image.edgeone.app/', {
       method: 'POST',
@@ -26,11 +28,12 @@ export default async function onRequest(context) {
         'OE-API-KEY': AK,
         'OE-TEMPLATE-ID': 'ep-tB9p4ZAP5hKL'
       },
-      body: JSON.stringify(templateData),
+      body: JSON.stringify(body),
       signal: controller.signal
     });
 
     clearTimeout(timeoutId);
+    console.log('上游 API 响应状态:', res.status);
 
     const contentType = res.headers.get('content-type') || '';
 
