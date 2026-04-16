@@ -162,15 +162,6 @@
                     </div>
                     <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff" style="display: none;">
                     <div id="uploadStatus" class="upload-status"></div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="cdnDomain" style="font-size: 12px; margin-bottom: 3px;">CDN 域名</label>
-                        <select id="cdnDomain" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-                            <option value="edgeoneimg.cdn.sn" selected>EdgeOne (默认)</option>
-                            <option value="img.scdn.io">失控的防御系统</option>
-                            <option value="cloudflareimg.cdn.sn">CloudFlare</option>
-                            <option value="esaimg.cdn1.vip">ESA</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="photo-preview" id="photoPreview"></div>
             </div>
@@ -207,7 +198,6 @@
                 const formData = new FormData();
                 formData.append('image', file);
                 formData.append('outputFormat', 'jpeg');
-                formData.append('cdn_domain', document.getElementById('cdnDomain').value);
 
                 const res = await fetch('https://img.scdn.io/api/v1.php', {
                     method: 'POST',
