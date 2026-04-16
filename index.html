@@ -52,15 +52,42 @@
         }
         .photo-upload {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
         }
-        .photo-upload input[type="file"] {
+        .photo-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .photo-input-group input[type="url"] {
             flex: 1;
         }
-        .photo-upload span {
-            color: #888;
+        .photo-input-group button.upload-btn {
+            width: auto;
+            padding: 10px 15px;
+            white-space: nowrap;
+            margin-top: 0;
+        }
+        .upload-status {
+            display: none;
             font-size: 12px;
+            color: #666;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .upload-status.show {
+            display: block;
+        }
+        .upload-status.loading {
+            color: #007bff;
+        }
+        .upload-status.success {
+            color: #28a745;
+        }
+        .upload-status.error {
+            color: #dc3545;
         }
         .photo-preview {
             margin-top: 10px;
@@ -129,7 +156,21 @@
             <div class="form-group">
                 <label>照片</label>
                 <div class="photo-upload">
-                    <input type="url" id="photo" placeholder="输入照片 URL（必须可公开访问）" required>
+                    <div class="photo-input-group">
+                        <input type="url" id="photo" placeholder="输入照片 URL（必须可公开访问）或上传文件" required>
+                        <button type="button" id="uploadFileBtn" class="upload-btn">选择文件上传</button>
+                    </div>
+                    <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff" style="display: none;">
+                    <div id="uploadStatus" class="upload-status"></div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="cdnDomain" style="font-size: 12px; margin-bottom: 3px;">CDN 域名</label>
+                        <select id="cdnDomain" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                            <option value="edgeoneimg.cdn.sn" selected>EdgeOne (默认)</option>
+                            <option value="img.scdn.io">失控的防御系统</option>
+                            <option value="cloudflareimg.cdn.sn">CloudFlare</option>
+                            <option value="esaimg.cdn1.vip">ESA</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="photo-preview" id="photoPreview"></div>
             </div>
@@ -139,13 +180,65 @@
     </div>
 
     <script>
-        // 不支持本地文件上传，只能使用 URL
-        // let photoDataUrl = null;
+        // 文件上传处理
+        document.getElementById('uploadFileBtn').addEventListener('click', function() {
+            document.getElementById('photoFile').click();
+        });
 
-        // 移除文件上传预览功能（不支持 base64，会导致请求过大超时）
-        // document.getElementById('photoFile').addEventListener('change', function(e) {
-        //     ...
-        // });
+        document.getElementById('photoFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 验证文件类型
+            const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff'];
+            if (!supportedTypes.includes(file.type)) {
+                const statusEl = document.getElementById('uploadStatus');
+                statusEl.textContent = '❌ 不支持的文件格式，请上传 jpg, png, webp, bmp, tiff, gif 格式的图片';
+                statusEl.className = 'upload-status show error';
+                return;
+            }
+
+            // 显示上传中提示
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.textContent = '⏳ 正在上传文件...';
+            statusEl.className = 'upload-status show loading';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('outputFormat', 'jpeg');
+                formData.append('cdn_domain', document.getElementById('cdnDomain').value);
+
+                const res = await fetch('https://img.scdn.io/api/v1.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.success && data.url) {
+                    // 设置 URL 输入框
+                    document.getElementById('photo').value = data.url;
+                    statusEl.textContent = `✓ 上传成功！图片 URL: ${data.url}`;
+                    statusEl.className = 'upload-status show success';
+
+                    // 显示预览
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = '<img src="' + data.url + '" alt="照片预览" onerror="this.parentElement.innerHTML=\'<p style=color:red>图片加载失败</p>\'">';
+
+                    // 3 秒后隐藏状态提示
+                    setTimeout(() => {
+                        statusEl.className = 'upload-status';
+                    }, 3000);
+                } else {
+                    statusEl.textContent = `❌ 上传失败: ${data.message || '未知错误'}`;
+                    statusEl.className = 'upload-status show error';
+                }
+            } catch (error) {
+                statusEl.textContent = `❌ 上传出错: ${error.message}`;
+                statusEl.className = 'upload-status show error';
+            }
+        });
 
         // URL 输入时实时预览
         document.getElementById('photo').addEventListener('input', function() {
