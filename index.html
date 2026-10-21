@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/windows-ui-fabric@4.0.2/dist/config/app-config.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/windows-ui-fabric@4.0.2/dist/windows-ui.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/windows-ui-fabric@4.0.2/dist/icons/fonts/fonts.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/windows-ui-fabric@4.0.2/dist/windows-ui.min.js" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>通缉令生成器</title>
-    <style>
+    <!--
+        <style>
         * {
             box-sizing: border-box;
             margin: 0;
@@ -128,6 +136,7 @@
             margin-top: 10px;
         }
     </style>
+    -->
 </head>
 <body>
     <div class="container">
@@ -135,37 +144,37 @@
         <form id="posterForm">
             <div class="form-group">
                 <label for="title">标题</label>
-                <input type="text" id="title" value="通缉" required>
+                <input class="app-input-text" type="text" id="title" value="通缉" required>
             </div>
             <div class="form-group">
                 <label for="name">姓名</label>
-                <input type="text" id="name" value="张三" required>
+                <input class="app-input-text" type="text" id="name" value="张三" required>
             </div>
             <div class="form-group">
                 <label for="desc">描述</label>
-                <textarea id="desc" required>该人员自4月2日起失踪，如有知其下落者，请速与警方联系，提供线索者将给予重奖。</textarea>
+                <textarea class="app-textarea" id="desc" required>该人员自4月2日起失踪，如有知其下落者，请速与警方联系，提供线索者将给予重奖。</textarea>
             </div>
             <div class="form-group">
                 <label for="warning">警告</label>
-                <input type="text" id="warning" value="请勿擅自接近，如有发现请立即报警">
+                <input class="app-input-text" type="text" id="warning" value="请勿擅自接近，如有发现请立即报警">
             </div>
             <div class="form-group">
                 <label for="contact">联系方式</label>
-                <textarea id="contact" required>如有任何线索，请联系当地派出所或拨打求助热线：null。</textarea>
+                <textarea class="app-textarea" id="contact" required>如有任何线索，请联系当地派出所或拨打求助热线：null。</textarea>
             </div>
             <div class="form-group">
                 <label>照片</label>
                 <div class="photo-upload">
                     <div class="photo-input-group">
-                        <input type="url" id="photo" placeholder="输入照片 URL（必须可公开访问）或上传文件" required>
-                        <button type="button" id="uploadFileBtn" class="upload-btn">选择文件上传</button>
+                        <input type="url" class="app-input-text" id="photo" placeholder="输入照片 URL（必须可公开访问）或上传文件" required>
+                        <button type="button" class="app-btn" id="uploadFileBtn" class="upload-btn">选择文件上传</button>
                     </div>
-                    <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff" style="display: none;">
+                    <input class="app-input-text" type="file" id="photoFile" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff" style="display: none;">
                     <div id="uploadStatus" class="upload-status"></div>
                 </div>
                 <div class="photo-preview" id="photoPreview"></div>
             </div>
-            <button type="submit" id="generateBtn">生成通缉令</button>
+            <button class="app-btn" type="submit" id="generateBtn">生成通缉令</button>
         </form>
         <div class="result" id="result"></div>
     </div>
