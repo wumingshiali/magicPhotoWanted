@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "Magic Photo OpenHarmony entry module",
+  "main": "",
+  "author": "Magic Photo",
+  "license": "MIT",
+  "dependencies": {}
+}

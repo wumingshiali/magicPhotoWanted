@@ -1,0 +1,27 @@
+{
+  "name": "magic-photo-wanted",
+  "private": true,
+  "version": "1.0.0",
+  "description": "完全本地的通缉令海报生成器",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "prepare-dist": "node scripts/prepare-dist.mjs",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:portable": "tauri build --no-bundle",
+    "offline-html": "node scripts/prepare-dist.mjs",
+    "openharmony:sync": "npm run prepare-dist && node scripts/sync-openharmony.mjs",
+    "package": "npm run build && node scripts/package-release.mjs",
+    "icon": "tauri icon app-icon.svg",
+    "android:init": "tauri android init",
+    "android:dev": "tauri android dev",
+    "android:build": "tauri android build",
+    "ios:init": "tauri ios init",
+    "ios:dev": "tauri ios dev",
+    "ios:build": "tauri ios build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0"
+  }
+}

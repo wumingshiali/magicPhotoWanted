@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>用于选择一张本地照片生成通缉令海报；照片只在应用内存中处理，不会上传或保存。</string>
+    <key>NSCameraUsageDescription</key>
+    <string>用于拍摄一张本地照片生成通缉令海报；照片只在应用内存中处理，不会上传或保存。</string>
+</dict>
+</plist>

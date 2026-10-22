@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#eaf2fb">
-    <meta name="description" content="选择一张本地照片，填写档案信息，选择通缉令预设，在浏览器中即时生成一张可下载的通缉令海报。照片不会上传。">
+    <meta name="description" content="选择一张本地照片，填写档案信息，选择通缉令预设，在本地即时生成一张可下载的通缉令海报。照片不会上传。">
     <title>通缉令生成器 · Magic Photo</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2357b8ff'/%3E%3Cstop offset='1' stop-color='%23005fb8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M10 7h12v18H10z' fill='none' stroke='white' stroke-width='1.7'/%3E%3Ccircle cx='16' cy='13' r='2.6' fill='none' stroke='white' stroke-width='1.7'/%3E%3Cpath d='M11.6 21c.5-2.5 2.2-3.8 4.4-3.8s3.9 1.3 4.4 3.8' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E">
     <script>
@@ -39,9 +39,9 @@
             if (themeColor) themeColor.setAttribute('content', themeColors[theme]);
         })();
     </script>
-    <link href="https://cdn.jsdmirror.com/npm/windows-ui-fabric@4.0.2/dist/config/app-config.css" rel="stylesheet" crossorigin="anonymous">
-    <link href="https://cdn.jsdmirror.com/npm/windows-ui-fabric@4.0.2/dist/windows-ui.min.css" rel="stylesheet" crossorigin="anonymous">
-    <link href="https://cdn.jsdmirror.com/npm/windows-ui-fabric@4.0.2/dist/icons/winui-icons.slim.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="./assets/winui/app-config.css" rel="stylesheet">
+    <link href="./assets/winui/windows-ui.min.css" rel="stylesheet">
+    <link href="./assets/winui/winui-icons.slim.css" rel="stylesheet">
     <style>
         /* ============================================================
            Windows 11 / WinUI 3 inspired shell
@@ -3177,6 +3177,43 @@
             }
         }
 
+        /* ============================================================
+           Desktop runtime toast (native save feedback)
+           ============================================================ */
+        .native-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            z-index: 1000;
+            max-width: min(520px, calc(100vw - 32px));
+            padding: 10px 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--app-text);
+            box-shadow: 0 12px 32px -12px rgba(21, 38, 62, .32), 0 2px 8px rgba(21, 38, 62, .12);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: center;
+            overflow-wrap: anywhere;
+            transform: translate(-50%, 8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .16s ease, transform .16s ease;
+        }
+
+        .native-toast.is-visible {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        .native-toast[data-tone="error"] {
+            border-color: var(--error-border);
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
     </style>
 </head>
 <body>
@@ -3337,7 +3374,7 @@
                         <div class="page-heading">
                             <span class="page-eyebrow"><span class="live-dot" aria-hidden="true"></span>新建档案</span>
                             <h1 id="pageTitle">创建通缉令</h1>
-                            <p>填写档案信息并选择一张本地照片，挑选通缉令预设，浏览器会在本机即时合成一张可下载的通缉令海报。照片不会离开当前页面。</p>
+                            <p>填写档案信息并选择一张本地照片，挑选通缉令预设，应用会在本机即时合成一张可下载的通缉令海报。照片不会离开本机。</p>
                         </div>
                         <button class="header-meta" type="button" id="headerStyleTrigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="styleMenu" title="切换通缉令预设" aria-label="切换通缉令预设，当前为 简洁">
                             <span class="header-meta-icon" aria-hidden="true">
@@ -3464,7 +3501,7 @@
                                         <rect x="5" y="10" width="14" height="10" rx="1.6"/>
                                         <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/>
                                     </svg>
-                                    照片只会在当前浏览器内存中暂存，不会上传到任何服务器。刷新或关闭页面后自动清除，请勿使用敏感信息或他人隐私照片。
+                                    照片只会在当前应用内存中暂存，不会上传到任何服务器。关闭应用或页面后自动清除，请勿使用敏感信息或他人隐私照片。
                                 </p>
                             </form>
                         </div>
@@ -3535,7 +3572,7 @@
                                         <div class="loading-copy">
                                             <span class="loading-time">LOCAL</span>
                                             <h3>正在本地合成你的通缉令</h3>
-                                            <p>浏览器正在绘制照片与文案，无需上传或等待服务器。几秒内即可完成。</p>
+                                            <p>应用正在绘制照片与文案，无需上传或等待服务器。几秒内即可完成。</p>
                                         </div>
                                     </div>
 
@@ -3673,7 +3710,7 @@
             </button>
         </div>
         <div class="dialog-body">
-            <p id="helpDesc">生成一张通缉令海报只需要三步。所有字段都可以随时修改，预览会实时同步；点击右上角的“预设”或页面标题右侧的“通缉令预设”卡片，可为海报切换简洁、玄凤鹦鹉、WinUI 3 与复古四种预设。海报完全在浏览器本地合成，照片不会上传。界面始终固定为 WinUI 3。</p>
+            <p id="helpDesc">生成一张通缉令海报只需要三步。所有字段都可以随时修改，预览会实时同步；点击右上角的“预设”或页面标题右侧的“通缉令预设”卡片，可为海报切换简洁、玄凤鹦鹉、WinUI 3 与复古四种预设。海报完全在本地合成，照片不会上传。界面始终固定为 WinUI 3。</p>
             <ol class="help-steps">
                 <li>
                     <span class="help-step-num" aria-hidden="true">1</span>
@@ -3686,14 +3723,14 @@
                     <span class="help-step-num" aria-hidden="true">2</span>
                     <div>
                         <strong>选择一张本地照片</strong>
-                        <p>拖放或点击选择本地图片。照片只在当前页面暂存，不会上传；刷新后需要重新选择。支持 JPG、PNG、WEBP、GIF、BMP、TIFF，最大 20 MB。</p>
+                        <p>拖放或点击选择本地图片。照片只在当前应用内暂存，不会上传；关闭应用后需要重新选择。支持 JPG、PNG、WEBP、GIF、BMP、TIFF，最大 20 MB。</p>
                     </div>
                 </li>
                 <li>
                     <span class="help-step-num" aria-hidden="true">3</span>
                     <div>
                         <strong>生成并下载</strong>
-                        <p>点击“生成通缉令”，浏览器会在本地即时合成。完成后可以下载 PNG 海报，或直接再生成一张。</p>
+                        <p>点击“生成通缉令”，应用会在本地即时合成。完成后可以下载 PNG 海报，或直接再生成一张。</p>
                     </div>
                 </li>
             </ol>
@@ -3702,7 +3739,7 @@
                     <rect x="5" y="10" width="14" height="10" rx="1.6"/>
                     <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/>
                 </svg>
-                照片只在当前浏览器内存中暂存，不会上传，也不会写入本地存储。刷新或关闭页面后自动清除。本工具仅供娱乐创作。
+                照片只会在当前应用内存中暂存，不会上传，也不会写入本地存储。关闭应用或页面后自动清除。本工具仅供娱乐创作。
             </p>
         </div>
         <div class="dialog-footer">
@@ -3883,8 +3920,8 @@
                     if (oldUrl) URL.revokeObjectURL(oldUrl);
                     photoFile.value = '';
                     dropZone.classList.remove('is-invalid');
-                    setUploadStatus(`已本地暂存：${file.name}。刷新页面后需要重新选择。`, 'success');
-                    announce('照片已载入，只保存在当前页面。');
+                    setUploadStatus(`已本地暂存：${file.name}。关闭应用后需要重新选择。`, 'success');
+                    announce('照片已载入，只保存在当前应用内。');
                     if (previewPanel.dataset.state === 'result' || previewPanel.dataset.state === 'error') {
                         showPreview();
                     }
@@ -4738,7 +4775,7 @@
                 canvas.width = POSTER_WIDTH;
                 canvas.height = POSTER_HEIGHT;
                 const ctx = canvas.getContext('2d');
-                if (!ctx) throw new Error('当前浏览器不支持海报绘制。');
+                if (!ctx) throw new Error('当前环境不支持海报绘制。');
                 drawPoster(ctx, preset, data, image);
                 return new Promise((resolve, reject) => {
                     canvas.toBlob((blob) => {
@@ -4830,7 +4867,7 @@
 
                 if (!hasPhoto()) {
                     dropZone.classList.add('is-invalid');
-                    setUploadStatus('请先选择一张本地照片。照片只在当前页面暂存，不会上传。', 'error');
+                    setUploadStatus('请先选择一张本地照片。照片只在当前应用内暂存，不会上传。', 'error');
                     dropZone.focus();
                     dropZone.scrollIntoView({
                         behavior: reduceMotion.matches ? 'auto' : 'smooth',
@@ -4855,7 +4892,7 @@
                 setPanelState('loading', '本地合成');
                 refreshControls();
                 scrollPreviewIntoView();
-                announce('开始在浏览器本地合成海报。');
+                announce('开始本地合成海报。');
 
                 const startedAt = performance.now();
                 try {
@@ -4867,7 +4904,7 @@
                     await showResult(url);
                 } catch (error) {
                     console.error(error);
-                    showError('本地合成失败，请检查照片或浏览器设置后重试。');
+                    showError('本地合成失败，请检查照片或系统设置后重试。');
                 } finally {
                     state.isGenerating = false;
                     refreshControls();
@@ -5215,6 +5252,147 @@
             });
 
             updateSteps();
+        })();
+    </script>
+
+    <script>
+        /* ------------------------------------------------------------
+           Native shell integration (Tauri desktop + mobile)
+           Uses the native save dialog when the page runs inside the
+           app; the offline browser build keeps its download behaviour.
+           ------------------------------------------------------------ */
+        (() => {
+            'use strict';
+
+            const tauri = window.__TAURI__;
+            const core = tauri && tauri.core;
+            if (!core || typeof core.invoke !== 'function') return;
+
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            document.documentElement.dataset.runtime = isMobile ? 'mobile' : 'desktop';
+
+            const downloadLink = document.getElementById('downloadLink');
+            if (!downloadLink) return;
+
+            let toastTimer = 0;
+            let saving = false;
+
+            function showToast(message, tone = 'neutral') {
+                let toast = document.querySelector('.native-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.className = 'native-toast';
+                    toast.setAttribute('role', 'status');
+                    toast.setAttribute('aria-live', 'polite');
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.dataset.tone = tone;
+                void toast.offsetWidth;
+                toast.classList.add('is-visible');
+                window.clearTimeout(toastTimer);
+                toastTimer = window.setTimeout(() => {
+                    toast.classList.remove('is-visible');
+                }, tone === 'error' ? 6000 : 3600);
+            }
+
+            function blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = String(reader.result || '');
+                        const comma = result.indexOf(',');
+                        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+                    };
+                    reader.onerror = () => reject(reader.error || new Error('无法读取海报数据。'));
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            downloadLink.addEventListener('click', async (event) => {
+                const href = downloadLink.getAttribute('href');
+                if (!href || href === '#') return;
+
+                event.preventDefault();
+                if (saving) return;
+
+                saving = true;
+                downloadLink.setAttribute('aria-busy', 'true');
+                try {
+                    const response = await fetch(href);
+                    if (!response.ok) throw new Error('无法读取海报数据。');
+                    const base64Data = await blobToBase64(await response.blob());
+                    const savedPath = await core.invoke('save_poster', {
+                        base64Data,
+                        defaultName: downloadLink.download || '通缉令.png'
+                    });
+                    if (savedPath) showToast(isMobile ? '海报已保存。' : `海报已保存到：${savedPath}`);
+                    else showToast('已取消保存。');
+                } catch (error) {
+                    console.error(error);
+                    showToast(`保存失败：${error && error.message ? error.message : error}`, 'error');
+                } finally {
+                    saving = false;
+                    downloadLink.removeAttribute('aria-busy');
+                }
+            }, true);
+        })();
+        /* ------------------------------------------------------------
+           OpenHarmony shell integration
+           The ArkTS wrapper injects window.ohosBridge. Saving goes
+           through the system document picker so no storage permission
+           is required. Browser and Tauri builds ignore this block.
+           ------------------------------------------------------------ */
+        (() => {
+            'use strict';
+
+            const bridge = window.ohosBridge;
+            if (!bridge || typeof bridge.saveImage !== 'function') return;
+
+            document.documentElement.dataset.runtime = 'openharmony';
+
+            const downloadLink = document.getElementById('downloadLink');
+            if (!downloadLink) return;
+
+            let saving = false;
+
+            function blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = String(reader.result || '');
+                        const comma = result.indexOf(',');
+                        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+                    };
+                    reader.onerror = () => reject(reader.error || new Error('无法读取海报数据。'));
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            downloadLink.addEventListener('click', async (event) => {
+                const href = downloadLink.getAttribute('href');
+                if (!href || href === '#') return;
+
+                event.preventDefault();
+                if (saving) return;
+
+                saving = true;
+                downloadLink.setAttribute('aria-busy', 'true');
+                try {
+                    const response = await fetch(href);
+                    if (!response.ok) throw new Error('无法读取海报数据。');
+                    const base64Data = await blobToBase64(await response.blob());
+                    bridge.saveImage(base64Data, downloadLink.download || '通缉令.png');
+                } catch (error) {
+                    console.error(error);
+                    if (typeof bridge.showError === 'function') {
+                        bridge.showError(String(error && error.message ? error.message : error));
+                    }
+                } finally {
+                    saving = false;
+                    downloadLink.removeAttribute('aria-busy');
+                }
+            }, true);
         })();
     </script>
 </body>

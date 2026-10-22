@@ -1,0 +1,8 @@
+{
+  "modelVersion": "5.0.0",
+  "description": "Magic Photo · 通缉令生成器（OpenHarmony 离线壳）",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.21"
+  }
+}

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Frontend build output
+dist/
+
+# Rust / Tauri build output
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/.kotlin/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/app/src/main/jniLibs/
+src-tauri/gen/android/app/src/main/java/**/generated/
+src-tauri/gen/android/local.properties
+src-tauri/gen/apple/build/
+src-tauri/gen/apple/DerivedData/
+src-tauri/gen/android/.idea/
+src-tauri/gen/apple/*.xcworkspace/xcuserdata/
+src-tauri/gen/apple/*.xcodeproj/xcuserdata/
+
+# OpenHarmony / DevEco
+openharmony/.hvigor/
+openharmony/oh_modules/
+openharmony/entry/oh_modules/
+openharmony/build/
+openharmony/entry/build/
+openharmony/local.properties
+openharmony/.idea/
+openharmony/**/*.hap
+openharmony/**/*.hsp
+openharmony/**/*.app
+
+# Packaged artifacts
+release/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
