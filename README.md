@@ -20,6 +20,12 @@ Windows 与 Android 成品位于 [`release/`](release/)：
 
 Android APK 仅用于本地安装测试；上架应用商店或公开分发前，请在 Android Studio 中配置自己的签名。macOS / Linux / iOS 需要按 [docs/跨平台构建.md](docs/跨平台构建.md) 在对应系统构建；仓库已包含全部平台配置和移动端工程。
 
+## 在线网页版
+
+网页入口通过 GitHub Pages 部署，地址为 `https://无名氏.top/magicPhotoWanted/`。网页版直接加载 `assets/winui/` 下的 CSS 资源，不使用内嵌单文件；每次 `main` 更新会由 `Website` 工作流自动重新部署。桌面和移动安装包仍然使用内嵌的离线页面，不依赖这个网站。
+
+> 该自定义域名继承自 `wumingshiali.github.io` 的 Pages 配置。若域名无法访问，需要在 Cloudflare 为根域名添加 GitHub Pages 的 A 记录，并把 `www` 指向 `wumingshiali.github.io`；详见 [docs/跨平台构建.md](docs/跨平台构建.md#网页版github-pages)。
+
 详细使用说明见 [docs/使用说明.md](docs/使用说明.md)。
 
 ## 开发
