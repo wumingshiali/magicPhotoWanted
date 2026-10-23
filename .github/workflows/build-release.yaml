@@ -38,6 +38,11 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      # 桌面端 Rust 缓存
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
       - run: npm ci
       - run: npm run build
         env:
@@ -71,36 +76,50 @@ jobs:
         with:
           packages: ''
 
-      - name: Install Android SDK 37 / NDK 29
+      # 优化 NDK：直接检测并使用 GitHub 容器内置的 NDK 免去下载时间
+      - name: Use Pre-installed Android NDK & SDK
         run: |
-          sdkmanager "platform-tools" "platforms;android-37.0" "platforms;android-36" \
-            "build-tools;37.0.0" "build-tools;36.0.0" \
-            "ndk;29.0.13846066" "cmake;3.31.6"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> "$GITHUB_ENV"
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "cmake;3.22.1"
+          NDK_PATH=$(ls -d $ANDROID_HOME/ndk/* | sort -V | tail -n 1)
+          echo "NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
+          echo "Using pre-installed NDK located at: $NDK_PATH"
 
+      # 保持四架构编译，保证对所有真机与模拟器的极致兼容性
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
+      # 安卓端 Rust 编译缓存
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
       - run: npm ci
       
-      # 移除了引发重复冲突的末尾参数
-      - run: npx tauri android build --apk --ci
+      # 1. 显式追加 `-- --apk`，强制新版 Tauri CLI 在 CI 环境下打包出真正的 .apk 文件
+      - run: npx tauri android build --apk --ci -- --apk
 
+      # 2. 兼容验证模块，自动寻找构建出的产物进行网络权限安全性检查
       - name: Verify no network permission
         run: |
-          apk="$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | head -n 1)"
-          if "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
-            echo "APK unexpectedly requests INTERNET permission"
+          apk="$(find src-tauri/gen/android/app/build/outputs -name '*.apk' -o -name '*.aab' | head -n 1)"
+          if [ -z "$apk" ]; then
+            echo "No build artifact found!"
+            exit 1
+          fi
+          if "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
+            echo "APK/AAB unexpectedly requests INTERNET permission"
             exit 1
           fi
 
+      # 3. 扩大路径捕获范围，确保放开的过滤规则能把生成的单架构 APK 或 AAB 矩阵全部捞出来
       - uses: actions/upload-artifact@v4
         with:
           name: MagicPhoto-Android
           if-no-files-found: error
           path: |
-            src-tauri/gen/android/app/build/outputs/apk/release/**/*.apk
+            src-tauri/gen/android/app/build/outputs/**/*.apk
+            src-tauri/gen/android/app/build/outputs/**/*.aab
 
   ios:
     name: iOS (simulator, unsigned)
@@ -117,8 +136,14 @@ jobs:
         with:
           targets: aarch64-apple-ios-sim
 
-      - name: Install CocoaPods
-        run: brew install cocoapods
+      # iOS 编译缓存
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # 使用更加高效的 gem 安装 CocoaPods，避免沉重的 brew 虚度两三分钟
+      - name: Install CocoaPods (Fast)
+        run: sudo gem install cocoapods -N
 
       - run: npm ci
       - run: npx tauri ios init --ci
