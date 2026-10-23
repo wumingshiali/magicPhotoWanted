@@ -76,13 +76,12 @@ jobs:
         with:
           packages: ''
 
-      # 优化 NDK：直接检测并使用 GitHub 容器内置的 NDK 免去下载时间
-      - name: Use Pre-installed Android NDK & SDK
+      - name: Install Android SDK 37 / NDK 29
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "cmake;3.22.1"
-          NDK_PATH=$(ls -d $ANDROID_HOME/ndk/* | sort -V | tail -n 1)
-          echo "NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
-          echo "Using pre-installed NDK located at: $NDK_PATH"
+          sdkmanager "platform-tools" "platforms;android-37.0" "platforms;android-36" \
+            "build-tools;37.0.0" "build-tools;36.0.0" \
+            "ndk;29.0.13846066" "cmake;3.31.6"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> "$GITHUB_ENV"
 
       # 保持四架构编译，保证对所有真机与模拟器的极致兼容性
       - uses: dtolnay/rust-toolchain@stable
@@ -96,18 +95,16 @@ jobs:
 
       - run: npm ci
       
-      # 1. 显式追加 `-- --apk`，强制新版 Tauri CLI 在 CI 环境下打包出真正的 .apk 文件
-      - run: npx tauri android build --apk --ci -- --apk
+      - run: npx tauri android build --apk --ci
 
-      # 2. 兼容验证模块，自动寻找构建出的产物进行网络权限安全性检查
       - name: Verify no network permission
         run: |
-          apk="$(find src-tauri/gen/android/app/build/outputs -name '*.apk' -o -name '*.aab' | head -n 1)"
+          apk="$(find src-tauri/gen/android/app/build/outputs \( -name '*.apk' -o -name '*.aab' \) | head -n 1)"
           if [ -z "$apk" ]; then
             echo "No build artifact found!"
             exit 1
           fi
-          if "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
+          if "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
             echo "APK/AAB unexpectedly requests INTERNET permission"
             exit 1
           fi
