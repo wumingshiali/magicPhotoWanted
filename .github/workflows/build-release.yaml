@@ -1,0 +1,131 @@
+name: Release Build
+
+on:
+  workflow_dispatch: # 只保留手动运行触发器
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+          - name: macOS
+            os: macos-latest
+          - name: Linux
+            os: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libgtk-3-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - run: npm ci
+      - run: npm run build
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MagicPhoto-${{ matrix.name }}
+          if-no-files-found: warn
+          path: |
+            src-tauri/target/release/bundle/**
+            src-tauri/target/release/magic-photo.exe
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - name: Install Android SDK 37 / NDK 29
+        run: |
+          sdkmanager "platform-tools" "platforms;android-37.0" "platforms;android-36" \
+            "build-tools;37.0.0" "build-tools;36.0.0" \
+            "ndk;29.0.13846066" "cmake;3.31.6"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - run: npm ci
+      
+      # 已切换为 release 生产编译
+      - run: npx tauri android build --apk --release --ci
+
+      - name: Verify no network permission
+        run: |
+          apk="$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | head -n 1)"
+          if "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
+            echo "APK unexpectedly requests INTERNET permission"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MagicPhoto-Android
+          if-no-files-found: error
+          path: |
+            src-tauri/gen/android/app/build/outputs/apk/release/**/*.apk
+
+  ios:
+    name: iOS (simulator, unsigned)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios-sim
+
+      - name: Install CocoaPods
+        run: brew install cocoapods
+
+      - run: npm ci
+      - run: npx tauri ios init --ci
+      - run: npx tauri ios build --target aarch64-sim --ci
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MagicPhoto-iOS-simulator
+          if-no-files-found: warn
+          path: src-tauri/gen/apple/build/**
