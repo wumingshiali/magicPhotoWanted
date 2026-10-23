@@ -84,8 +84,8 @@ jobs:
 
       - run: npm ci
       
-      # 修复了 --release 参数传递错误的问题
-      - run: npx tauri android build --apk --ci -- --release
+      # 移除了引发重复冲突的末尾参数
+      - run: npx tauri android build --apk --ci
 
       - name: Verify no network permission
         run: |
